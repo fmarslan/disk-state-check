@@ -23,8 +23,8 @@ class ConfigManager:
         self.fileSize=int(os.getenv('FILE_SIZE',8))
         self.fileName=str(os.getenv('FILE_NAME','/tmp/check.tmp'))
         self.logLevel=str(os.getenv('LOG_LEVEL','INFO'))
-        self.logFormat=os.getenv('LOG_FORMAT','{ \'level\': \'%(levelname)s\', \'message\':\'%(message)s\'}')
-        self.interval=os.getenv('CHECK_INTERVAL',1)
+        self.logFormat=str(os.getenv('LOG_FORMAT','{ \'level\': \'%(levelname)s\', \'message\':\'%(message)s\'}'))
+        self.interval=int(os.getenv('CHECK_INTERVAL',1))
     def asJson(self):
         jsonConfig='{{"port":{0},"fileSize":"{1} Bytes","fileName":"{2}","logLevel":"{3}", "logFormat":"{4}","interval":"{5} s", "prefix":"{6}", "hostname":"{7}"}}'.format(self.port, self.fileSize, self.fileName, self.logLevel,self.logFormat, self.interval,self.prefix,self.hostname)
         return jsonConfig

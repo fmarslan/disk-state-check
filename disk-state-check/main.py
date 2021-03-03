@@ -9,6 +9,7 @@ import time
 import sys
 import hashlib
 import binascii
+import socket
 
 isRunning=True
 fileAccess='OK'
@@ -16,6 +17,8 @@ fileAccessDuration=None
 
 class ConfigManager:
     def __init__(self):
+        self.hostname=str(os.getenv('HOST_NAME',socket.gethostname()))
+        self.prefix=str(os.getenv('PREFIX','fmarslan_'))
         self.port=int(os.getenv('PORT', 8080))
         self.fileSize=int(os.getenv('FILE_SIZE',8))
         self.fileName=str(os.getenv('FILE_NAME','/tmp/check.tmp'))
@@ -23,13 +26,13 @@ class ConfigManager:
         self.logFormat=os.getenv('LOG_FORMAT','{ \'level\': \'%(levelname)s\', \'message\':\'%(message)s\'}')
         self.interval=os.getenv('CHECK_INTERVAL',1)
     def asJson(self):
-        jsonConfig='{{"port":{0},"fileSize":"{1} Bytes","fileName":"{2}","logLevel":"{3}","interval":"{4} s"}}'.format(self.port, self.fileSize, self.fileName, self.logLevel, self.interval)
+        jsonConfig='{{"port":{0},"fileSize":"{1} Bytes","fileName":"{2}","logLevel":"{3}","interval":"{4} s", "prefix":"{5}", "hostname":"{6}"}}'.format(self.port, self.fileSize, self.fileName, self.logLevel, self.interval,self.prefix,self.hostname)
         return jsonConfig
 
 logger = logging.getLogger("diskcheck")
 Config = ConfigManager()
 logging.basicConfig(format=Config.logFormat, level=Config.logLevel)
-wrHist = prom_client.Histogram('write_read_latency_nanoseconds', 'Duration of Write/Read process in nanoseconds',['process'])
+wrHist = prom_client.Histogram(Config.prefix + 'write_read_latency_nanoseconds', 'Duration of Write/Read process in nanoseconds',['process','host'])
 
 def start_check():
     def check():
@@ -41,10 +44,10 @@ def start_check():
             content = os.urandom(Config.fileSize)
             read_content = []
             _timerStart = time.perf_counter_ns()
-            with wrHist.labels("write").time():
+            with wrHist.labels(process="write",host=Config.hostname).time():
                 with open(Config.fileName,'wb') as fout:
                     fout.write(content)
-            with wrHist.labels("read").time():
+            with wrHist.labels(process="read",host=Config.hostname).time():
                 with open(Config.fileName,'rb') as fin:
                     read_content = fin.read()
             if(hashlib.sha256(read_content).hexdigest()==hashlib.sha256(content).hexdigest()):
@@ -97,5 +100,3 @@ def run():
     start_check()
     tornado.ioloop.IOLoop.current().start()
     isRunning=False
-
-run()

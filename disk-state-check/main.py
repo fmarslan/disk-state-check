@@ -39,26 +39,26 @@ def start_check():
         global fileAccess
         global fileAccessDuration
         while isRunning:
-           # try:
-            time.sleep(Config.interval)
-            content = os.urandom(Config.fileSize)
-            read_content = []
-            _timerStart = time.perf_counter_ns()
-            with wrHist.labels(process="write",host=Config.hostname).time():
-                with open(Config.fileName,'wb') as fout:
-                    fout.write(content)
-            with wrHist.labels(process="read",host=Config.hostname).time():
-                with open(Config.fileName,'rb') as fin:
-                    read_content = fin.read()
-            if(hashlib.sha256(read_content).hexdigest()==hashlib.sha256(content).hexdigest()):
-                logger.debug(read_content)
-                fileAccess='OK'
-                fileAccessDuration=time.perf_counter_ns()-_timerStart
-            else:
-                logger.error(read_content)
-                fileAccess='NOT ACCESS'
-                fileAccessDuration=-1
-            """ except:
+            try:
+                time.sleep(Config.interval)
+                content = os.urandom(Config.fileSize)
+                read_content = []
+                _timerStart = time.perf_counter_ns()
+                with wrHist.labels(process="write",host=Config.hostname).time():
+                    with open(Config.fileName,'wb') as fout:
+                        fout.write(content)
+                with wrHist.labels(process="read",host=Config.hostname).time():
+                    with open(Config.fileName,'rb') as fin:
+                        read_content = fin.read()
+                if(hashlib.sha256(read_content).hexdigest()==hashlib.sha256(content).hexdigest()):
+                    logger.debug(read_content)
+                    fileAccess='OK'
+                    fileAccessDuration=time.perf_counter_ns()-_timerStart
+                else:
+                    logger.error(read_content)
+                    fileAccess='NOT ACCESS'
+                    fileAccessDuration=-1
+            except:
                 logger.error(sys.exc_info())
                 fileAccess='NOT ACCESS'
                 fileAccessDuration=-1 """

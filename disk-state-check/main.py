@@ -26,7 +26,7 @@ class ConfigManager:
         self.logFormat=os.getenv('LOG_FORMAT','{ \'level\': \'%(levelname)s\', \'message\':\'%(message)s\'}')
         self.interval=os.getenv('CHECK_INTERVAL',1)
     def asJson(self):
-        jsonConfig='{{"port":{0},"fileSize":"{1} Bytes","fileName":"{2}","logLevel":"{3}","interval":"{4} s", "prefix":"{5}", "hostname":"{6}"}}'.format(self.port, self.fileSize, self.fileName, self.logLevel, self.interval,self.prefix,self.hostname)
+        jsonConfig='{{"port":{0},"fileSize":"{1} Bytes","fileName":"{2}","logLevel":"{3}", "logFormat":"{4}","interval":"{5} s", "prefix":"{6}", "hostname":"{7}"}}'.format(self.port, self.fileSize, self.fileName, self.logLevel,self.logFormat, self.interval,self.prefix,self.hostname)
         return jsonConfig
 
 logger = logging.getLogger("diskcheck")
@@ -61,7 +61,7 @@ def start_check():
             except:
                 logger.error(sys.exc_info())
                 fileAccess='NOT ACCESS'
-                fileAccessDuration=-1 """
+                fileAccessDuration=-1
     _thread.start_new_thread( check,() )
 
 class MainHandler(tornado.web.RequestHandler):
@@ -80,8 +80,9 @@ class MainHandler(tornado.web.RequestHandler):
                 isRunning=False
                 self.write('{ "service": "PASSIVE" }')
             elif slug=='start':
-                isRunning=True
-                start_check()
+                if(isRunning!=True):
+                    isRunning=True
+                    start_check()
                 self.write('{ "service": "ACTIVE" }')
             elif slug=='config':
                 self.write(Config.asJson())
@@ -90,6 +91,7 @@ class MainHandler(tornado.web.RequestHandler):
         self.finish()
 
 def run():
+    global isRunning
     logging.info(Config.asJson())
     logging.info('RUNNING...')
 
@@ -100,3 +102,5 @@ def run():
     start_check()
     tornado.ioloop.IOLoop.current().start()
     isRunning=False
+
+run()

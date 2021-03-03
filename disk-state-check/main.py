@@ -7,7 +7,8 @@ import json
 import _thread
 import time
 import sys
-
+import hashlib
+import binascii
 
 isRunning=True
 fileAccess='OK'
@@ -35,29 +36,29 @@ def start_check():
         global fileAccess
         global fileAccessDuration
         while isRunning:
-            try:
-                time.sleep(Config.interval)
-                content = os.urandom(Config.fileSize)
-                read_content = []
-                _timerStart = time.perf_counter_ns()
-                with wrHist.labels("write").time():
-                    with open(Config.fileName, 'wb') as fout:
-                        fout.write(content)
-                with wrHist.labels("read").time():
-                    with open(Config.fileName,'rb') as fin:
-                        read_content = fin.read()
-                if(read_content==content):
-                    logger.debug(read_content)
-                    fileAccess='OK'
-                    fileAccessDuration=time.perf_counter_ns()-_timerStart
-                else:
-                    logger.error(read_content)
-                    fileAccess='NOT ACCESS'
-                    fileAccessDuration=-1
-            except:
-                logger.error(sys.exc_info())
+           # try:
+            time.sleep(Config.interval)
+            content = os.urandom(Config.fileSize)
+            read_content = []
+            _timerStart = time.perf_counter_ns()
+            with wrHist.labels("write").time():
+                with open(Config.fileName,'wb') as fout:
+                    fout.write(content)
+            with wrHist.labels("read").time():
+                with open(Config.fileName,'rb') as fin:
+                    read_content = fin.read()
+            if(hashlib.sha256(read_content).hexdigest()==hashlib.sha256(content).hexdigest()):
+                logger.debug(read_content)
+                fileAccess='OK'
+                fileAccessDuration=time.perf_counter_ns()-_timerStart
+            else:
+                logger.error(read_content)
                 fileAccess='NOT ACCESS'
                 fileAccessDuration=-1
+            """ except:
+                logger.error(sys.exc_info())
+                fileAccess='NOT ACCESS'
+                fileAccessDuration=-1 """
     _thread.start_new_thread( check,() )
 
 class MainHandler(tornado.web.RequestHandler):
@@ -96,3 +97,5 @@ def run():
     start_check()
     tornado.ioloop.IOLoop.current().start()
     isRunning=False
+
+run()

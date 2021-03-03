@@ -12,7 +12,7 @@ setup(
     entry_points={
         'console_scripts': [
             'disk-state-check= disk_state_check.main:run',
-        ],
+        ]
     },
     keywords='disk-state-check'
 )

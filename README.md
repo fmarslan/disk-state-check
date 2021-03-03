@@ -5,6 +5,8 @@ Duration of Write/Read process in nanoseconds
 Configuration
 
 ```sh
+ HOST_NAME: xxx # os hostname as default
+ PREFIX: fmarslan_
  PORT:8080
  FILE_SIZE:8  # bytes
  FILE_NAME: '/tmp/check.tmp'

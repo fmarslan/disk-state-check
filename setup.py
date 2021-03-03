@@ -9,6 +9,10 @@ setup(
     packages=['disk-state-check'],
     install_requires=['prometheus_client', 'tornado'],
     url='http://fmarslan.com'
-    scripts=['main'],
+    entry_points={
+        'console_scripts': [
+            'disk-state-check= disk-state-check.main:run',
+        ],
+    },
     keywords='disk-state-check'
 )

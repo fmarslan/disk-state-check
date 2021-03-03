@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name='disk-state-check',
+    name='disk_state_check',
     version='0.1',
     description='A disk state checker for write and read',
     author='Fatih Mehmet ARSLAN',
@@ -11,7 +11,7 @@ setup(
     url='http://fmarslan.com'
     entry_points={
         'console_scripts': [
-            'disk-state-check= disk-state-check.main:run',
+            'disk-state-check= disk_state_check.main:run',
         ],
     },
     keywords='disk-state-check'

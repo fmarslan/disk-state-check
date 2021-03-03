@@ -8,7 +8,7 @@ setup(
     author_email='contact@fmarslan.com',
     packages=['disk_state_check'],
     install_requires=['prometheus_client', 'tornado'],
-    url='http://fmarslan.com'
+    url='http://fmarslan.com',
     entry_points={
         'console_scripts': [
             'disk-state-check= disk_state_check.main:run',

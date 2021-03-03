@@ -31,3 +31,7 @@ http://localhost:8080/stop
 ### Service State
 
 http://localhost:8080/
+
+### Config Info
+
+http://localhost:8080/config

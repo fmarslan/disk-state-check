@@ -19,6 +19,7 @@ class ConfigManager:
         self.fileSize=int(os.getenv('FILE_SIZE',8))
         self.fileName=str(os.getenv('FILE_NAME','/tmp/check.tmp'))
         self.logLevel=str(os.getenv('LOG_LEVEL','INFO'))
+        self.logFormat=os.getenv('LOG_FORMAT','{ \'level\': \'%(levelname)s\', \'message\':\'%(message)s\'}')
         self.interval=os.getenv('CHECK_INTERVAL',1)
     def asJson(self):
         jsonConfig='{{"port":{0},"fileSize":"{1} Bytes","fileName":"{2}","logLevel":"{3}","interval":"{4} s"}}'.format(self.port, self.fileSize, self.fileName, self.logLevel, self.interval)
@@ -26,7 +27,7 @@ class ConfigManager:
 
 logger = logging.getLogger("diskcheck")
 Config = ConfigManager()
-logging.basicConfig(format='{ \'level\': \'%(levelname)s\', \'message\':\'%(message)s\'}', level=Config.logLevel)
+logging.basicConfig(format=Config.logFormat, level=Config.logLevel)
 wrHist = prom_client.Histogram('write_read_latency_nanoseconds', 'Duration of Write/Read process in nanoseconds',['process'])
 
 def start_check():
@@ -84,7 +85,7 @@ class MainHandler(tornado.web.RequestHandler):
                 self.write('{ "service":"' + str('ACTIVE' if isRunning else 'PASSIVE') + '", "status":"'+ fileAccess +'", "latency":' +str(fileAccessDuration)+ ' }')
         self.finish()
 
-if __name__ == '__main__':
+def run():
     logging.info(Config.asJson())
     logging.info('RUNNING...')
 

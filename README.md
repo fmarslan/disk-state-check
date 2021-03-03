@@ -129,7 +129,7 @@ http://localhost:8080/stop
 
 http://localhost:8080/
 
-```json
+```js
   {
     "service": "ACTIVE",
     "status": "OK", # NOT ACCESS or OK

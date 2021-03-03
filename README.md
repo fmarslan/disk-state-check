@@ -132,7 +132,7 @@ http://localhost:8080/
 ```js
   {
     "service": "ACTIVE",
-    "status": "OK", # NOT ACCESS or OK
+    "status": "OK", /*NOT ACCESS or OK*/
     "latency": 598194
   }
 ```

@@ -102,5 +102,3 @@ def run():
     start_check()
     tornado.ioloop.IOLoop.current().start()
     isRunning=False
-
-run()

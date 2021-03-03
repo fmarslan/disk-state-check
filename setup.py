@@ -6,7 +6,7 @@ setup(
     description='A disk state checker for write and read',
     author='Fatih Mehmet ARSLAN',
     author_email='contact@fmarslan.com',
-    packages=['disk-state-check'],
+    packages=['disk_state_check'],
     install_requires=['prometheus_client', 'tornado'],
     url='http://fmarslan.com'
     entry_points={

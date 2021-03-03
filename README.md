@@ -2,7 +2,7 @@
 Duration of Write/Read process in nanoseconds
 
 
-Configuration
+## Configuration
 
 ```sh
  HOST_NAME: xxx # os hostname as default
@@ -15,7 +15,7 @@ Configuration
  CHECK_INTERVAL:1 # seconds
 ```
 
-URLs
+## URLs
 
 ### Prometheus
 

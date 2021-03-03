@@ -59,7 +59,7 @@ def start_check():
                     fileAccess='NOT ACCESS'
                     fileAccessDuration=-1
             except:
-                logger.error(sys.exc_info())
+                logger.exception(sys.exc_info())
                 fileAccess='NOT ACCESS'
                 fileAccessDuration=-1
     _thread.start_new_thread( check,() )

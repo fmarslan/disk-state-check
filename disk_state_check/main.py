@@ -38,7 +38,7 @@ wrHist = prom_client.Histogram(Config.prefix + 'write_read_duration_nanoseconds'
 
 errCount= prom_client.Counter(Config.prefix + 'write_read_error_count', 'Number of Write/Read Error',['process','host'])
 serviceState= prom_client.Enum(Config.prefix + 'write_read_service_state', 'State of Write/Read Service',['host'],states=['RUNNING', 'STOPPED'])
-diskState= prom_client.Enum(Config.prefix + 'write_read_disk_state', 'State of Write/Read Service',['process','host'],states=['OK', 'NOT ACCESS'])
+diskState= prom_client.Enum(Config.prefix + 'write_read_disk_state', 'State of Write/Read Service',['host'],states=['OK', 'NOT ACCESS'])
 
 
 def check():
@@ -50,7 +50,7 @@ def check():
             isRunning=False
         else:
             time.sleep(Config.interval)
-        diskState.labels(process="write",host=Config.hostname).state(fileAccess)
+        serviceState.labels(host=Config.hostname).state('RUNNING')
         content = os.urandom(Config.fileSize)
         read_content = []
         _timerStart = time.perf_counter_ns()
@@ -76,6 +76,8 @@ def check():
         logger.error(traceback.format_exc())
         fileAccess='NOT ACCESS'
         fileAccessDuration=-1
+    finally:
+        diskState.labels(host=Config.hostname).state(fileAccess)
 
 
 def start_check():

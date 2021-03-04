@@ -1,0 +1,106 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: disk-state-config
+  namespace: monitoring
+  labels:
+    app: disk-state
+data:
+  entry-point.sh: |
+    #!/bin/sh
+    pip3 install https://github.com/fmarslan/disk-state-check/archive/1.0.0.zip
+    disk-state-check
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: disk-state-storage
+  namespace: monitoring
+  labels:
+    app: disk-state
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: {storageName}
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: disk-state
+  namespace: monitoring
+  labels:
+    app: disk-state
+spec:
+  selector:
+    matchLabels:
+      app: disk-state
+  template:
+    metadata:
+      labels:
+        app: disk-state
+      annotations:
+         prometheus.io/scrape: "true"
+         prometheus.io/port: "8080"
+    spec:
+      containers:
+      - name: disk-state
+        image: python:3.9-alpine
+        imagePullPolicy: IfNotPresent
+        command:
+        - /config/entry-point.sh
+        env:
+        - name: PORT
+          value: "8080"
+        - name: FILE_SIZE
+          value: "8388608"
+        - name: HOST_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: FILE_NAME
+          value: "/tmp/$(HOST_NAME).tmp"
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: CHECK_INTERVAL
+          value: "30"
+        readinessProbe:
+          httpGet:
+            path: /check
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 3
+        livenessProbe:
+          httpGet:
+            path: /check
+            port: 8080
+          initialDelaySeconds: 120
+          periodSeconds: 5
+          timeoutSeconds: 3
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 16Mi
+        volumeMounts:
+        - name: disk-state-storage
+          mountPath: /tmp
+        - name: disk-state-config
+          mountPath: /config
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: disk-state-storage
+        persistentVolumeClaim:
+          claimName: disk-state-storage
+      - name: disk-state-config
+        configMap:
+          defaultMode: 0750
+          name: disk-state-config
+          items:
+          - key: "entry-point.sh"
+            path: "entry-point.sh"

@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='disk_state_check',
-    version='0.1',
+    version='1.0.0',
     description='A disk state checker for write and read',
     author='Fatih Mehmet ARSLAN',
     author_email='contact@fmarslan.com',

@@ -22,20 +22,17 @@ class ConfigManager:
         self.hostname=str(os.getenv('HOST_NAME',socket.gethostname()))
         self.prefix=str(os.getenv('PREFIX','fmarslan_'))
         self.port=int(os.getenv('PORT', 8080))
-        self.fileSize=int(os.getenv('FILE_SIZE',8))
+        self.fileSize=int(os.getenv('FILE_SIZE',1))
         self.fileName=str(os.getenv('FILE_NAME','/tmp/check.tmp'))
         self.logLevel=str(os.getenv('LOG_LEVEL','INFO'))
-        self.logFormat=str(os.getenv('LOG_FORMAT','{ \'level\': \'%(levelname)s\', \'message\':\'%(message)s\'}'))
+        self.logFormat=str(os.getenv('LOG_FORMAT','{ "logdate":"%(asctime)s","filename":"%(filename)s","funcName":"%(funcName)s", "line":"%(lineno)d", "level": "%(levelname)s", "message":"%(message)s","module":"%(module)s"}'))
         self.interval=int(os.getenv('CHECK_INTERVAL',1))
     def asJson(self):
         jsonConfig='{{"port":{0},"fileSize":"{1} Bytes","fileName":"{2}","logLevel":"{3}", "logFormat":"{4}","interval":"{5} s", "prefix":"{6}", "hostname":"{7}"}}'.format(self.port, self.fileSize, self.fileName, self.logLevel,self.logFormat, self.interval,self.prefix,self.hostname)
         return jsonConfig
 
 logger = logging.getLogger("diskcheck")
-Config = ConfigManager()
-logging.basicConfig(format=Config.logFormat, level=Config.logLevel)
-wrHist = prom_client.Histogram(Config.prefix + 'write_read_duration_nanoseconds', 'Duration of Write/Read process in nanoseconds',['process','host'])
-
+Config = ConfigManager()                    
 errCount= prom_client.Counter(Config.prefix + 'write_read_error_count', 'Number of Write/Read Error',['process','host'])
 serviceState= prom_client.Enum(Config.prefix + 'write_read_service_state', 'State of Write/Read Service',['host'],states=['RUNNING', 'STOPPED'])
 diskState= prom_client.Enum(Config.prefix + 'write_read_disk_state', 'State of Write/Read Service',['host'],states=['OK', 'NOT ACCESS'])
@@ -46,22 +43,29 @@ def check():
     global fileAccessDuration
     global isRunning
     try:
+        logger.debug("21")
         if Config.interval==-1:
             isRunning=False
         else:
             time.sleep(Config.interval)
+        logger.debug("22")
         serviceState.labels(host=Config.hostname).state('RUNNING')
+        logger.debug("23")
         content = os.urandom(Config.fileSize)
+        logger.debug("24")
         read_content = []
         _timerStart = time.perf_counter_ns()
+        logger.debug("25")
         with wrHist.labels(process="write",host=Config.hostname).time():
             with errCount.labels(process="write",host=Config.hostname).count_exceptions():
                 with open(Config.fileName,'wb') as fout:
                     fout.write(content)
+        logger.debug("26")
         with wrHist.labels(process="read",host=Config.hostname).time():
             with errCount.labels(process="read",host=Config.hostname).count_exceptions():
                 with open(Config.fileName,'rb') as fin:
                     read_content = fin.read()
+        logger.debug("27")
         if(hashlib.sha256(read_content).hexdigest()==hashlib.sha256(content).hexdigest()):
             logger.debug(read_content)
             fileAccess='OK'
@@ -72,12 +76,14 @@ def check():
             fileAccessDuration=-1
             wrHist.labels(process="read",host=Config.hostname).observe(-1)
             errCount.labels(process="equality",host=Config.hostname).inc() 
+        logger.debug("28")
     except:
         logger.error(traceback.format_exc())
         fileAccess='NOT ACCESS'
         fileAccessDuration=-1
     finally:
         diskState.labels(host=Config.hostname).state(fileAccess)
+        logger.debug("29")
 
 
 def start_check():
@@ -85,12 +91,13 @@ def start_check():
         while isRunning:
             check()
         serviceState.labels(host=Config.hostname).state('STOPPED')
-    _thread.start_new_thread( _check,() )
+    _thread.start_new_thread(_check,())
 
 
 
 class MainHandler(tornado.web.RequestHandler):
     async def get(self,slug):
+        logger.debug("1")
         global isRunning
         if slug=='metrics':
             self.write(prom_client.generate_latest(prom_client.REGISTRY))
@@ -113,10 +120,15 @@ class MainHandler(tornado.web.RequestHandler):
                 self.write(Config.asJson())
             elif slug=='check':
                 isRunning=True
+                logger.debug("2")
                 check()
+                logger.debug("3")
                 serviceState.labels(host=Config.hostname).state('STOPPED')
+                logger.debug("4")
                 self.set_status(200 if fileAccess=='OK' else 500)
+                logger.debug("5")
                 self.write('{ "service":"' + str('ACTIVE' if isRunning else 'PASSIVE') + '", "status":"'+ fileAccess +'", "duration":' +str(fileAccessDuration)+ ' }')
+                logger.debug("6")
             else :
                 self.write('{ "service":"' + str('ACTIVE' if isRunning else 'PASSIVE') + '", "status":"'+ fileAccess +'", "duration":' +str(fileAccessDuration)+ ' }')
         self.finish()

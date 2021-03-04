@@ -32,7 +32,9 @@ class ConfigManager:
         return jsonConfig
 
 logger = logging.getLogger("diskcheck")
-Config = ConfigManager()                    
+Config = ConfigManager()  
+logging.basicConfig(format=Config.logFormat, level=Config.logLevel)
+wrHist = prom_client.Histogram(Config.prefix + 'write_read_duration_nanoseconds', 'Duration of Write/Read process in nanoseconds',['process','host'])
 errCount= prom_client.Counter(Config.prefix + 'write_read_error_count', 'Number of Write/Read Error',['process','host'])
 serviceState= prom_client.Enum(Config.prefix + 'write_read_service_state', 'State of Write/Read Service',['host'],states=['RUNNING', 'STOPPED'])
 diskState= prom_client.Enum(Config.prefix + 'write_read_disk_state', 'State of Write/Read Service',['host'],states=['OK', 'NOT ACCESS'])
